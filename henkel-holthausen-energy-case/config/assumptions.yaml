@@ -1,0 +1,826 @@
+# Holthausen industrial energy screening model — assumptions (v0.1)
+#
+# Single source of truth for the pre-onsite screening model.
+# null means the parameter is intentionally unknown (type: TBD).
+# Do not replace a null with an invented plant parameter.
+
+metadata:
+  model_name: "Henkel Düsseldorf-Holthausen energy screening model"
+  model_version: "v0.1"
+  site_name: "Düsseldorf-Holthausen"
+  description: "Transparent pre-onsite screening assumptions. Not a digital twin."
+
+site:
+  model_scope:
+    value: "Full Düsseldorf-Holthausen industrial energy system"
+    type: modeling_choice
+    source_or_rationale: "v0.1 models site-wide energy demand before any company split."
+
+  company_allocation:
+    value: "Not modeled in v0.1"
+    type: modeling_choice
+    source_or_rationale: "Economic allocation of value to Henkel is handled in a later step."
+
+  steam_pressure_levels_real:
+    value: 4
+    unit: count
+    type: public
+    confidence: medium
+    source_or_rationale: "The operating site has four steam pressure levels. Kept as context; not modeled separately."
+
+  steam_pressure_levels_modeled:
+    value: 1
+    unit: count
+    type: modeling_choice
+    source_or_rationale: "v0.1 uses one aggregated steam bus."
+
+  annual_henkel_production_tonnes:
+    value: 455000
+    unit: t/a
+    type: derived
+    confidence: low
+    source_or_rationale: "Derived figure. Only intended later as a possible EUR/t denominator. Do not use it to allocate physical energy demand."
+
+demand:
+  # Screening judgment was low/medium. Stored as medium (allowed set: high, medium, low).
+  annual_steam_heat_gwh:
+    value: 1040
+    unit: GWh/a
+    type: derived
+    confidence: medium
+    source_or_rationale: "Derived from public Henkel / StoREN research. Screening judgment was low/medium; stored as medium."
+
+  annual_electricity_gwh:
+    value: 290
+    unit: GWh/a
+    type: derived
+    confidence: medium
+    source_or_rationale: "Derived from public Henkel / StoREN research. Screening judgment was low/medium; stored as medium."
+
+historical_reference:
+  steam_production_2012:
+    value: 1850000
+    unit: t/a
+    type: public
+    confidence: high
+    source_or_rationale: >
+      Historical measured operating data for the Holthausen power plant.
+
+  electricity_generation_2012:
+    value: 257.2
+    unit: GWh/a
+    type: public
+    confidence: high
+    source_or_rationale: >
+      Historical measured operating data for the Holthausen power plant.
+
+  steam_load_min_2012:
+    value: 120
+    unit: t/h
+    type: public
+    confidence: high
+    source_or_rationale: >
+      Approximate lower end of the observed annual steam-load range
+      reported for the 2012 operating year.
+
+  steam_load_max_2012:
+    value: 380
+    unit: t/h
+    type: public
+    confidence: high
+    source_or_rationale: >
+      Approximate upper end of the observed annual steam-load range
+      reported for the 2012 operating year.
+
+  electricity_generation_2016:
+    value: 285
+    unit: GWh/a
+    type: public
+    confidence: high
+    source_or_rationale: >
+      Reported historical annual electricity generation at the
+      Düsseldorf-Holthausen power plant.
+
+  total_energy_utilization_2016:
+    value: 0.83
+    unit: fraction
+    type: public
+    confidence: medium
+    source_or_rationale: >
+      Reported combined utilization of fuel for useful electricity
+      and heat in 2016.
+
+storen_reference:
+  reference_year:
+    value: 2018
+    unit: year
+    type: public
+    confidence: high
+    source_or_rationale: >
+      StoREN uses 2018 as the reference year for site energy demand.
+
+  steam_energy_share_2018:
+    value: 0.81
+    unit: fraction
+    type: public
+    confidence: medium
+    source_or_rationale: >
+      Approximate useful-energy demand share attributed to steam
+      in the StoREN 2018 reference year.
+
+  electricity_energy_share_2018:
+    value: 0.19
+    unit: fraction
+    type: public
+    confidence: medium
+    source_or_rationale: >
+      Approximate useful-energy demand share attributed to electricity
+      in the StoREN 2018 reference year.
+
+  steam_peak_2030_mw:
+    value: 168.4
+    unit: MW_th
+    type: public
+    confidence: medium
+    source_or_rationale: >
+      StoREN modeled maximum steam demand for 2030.
+      This is not a measured current peak.
+
+  electricity_peak_2030_mw:
+    value: 47.3
+    unit: MW_el
+    type: public
+    confidence: medium
+    source_or_rationale: >
+      StoREN modeled maximum electricity demand for 2030.
+      This is not a measured current peak.
+
+grid:
+  import_capacity_mw:
+    value: 64
+    unit: MW
+    type: public
+    confidence: medium
+    source_or_rationale: "Existing grid connection used in StoREN scenarios."
+
+  export_capacity_mw:
+    value: null
+    unit: MW
+    type: TBD
+    confidence: low
+    critical: true
+    source_or_rationale: >
+      Site-specific export capacity is not publicly confirmed.
+      This can materially affect CHP dispatch value and must therefore
+      remain a critical TBD parameter.
+
+fuel_mix:
+  note: >
+    Screening assumption derived from a reported late-2023 operating mix.
+    The interpretation used here is approximately 80% gaseous fuels and
+    20% coal, with biomethane/biogas representing approximately 40% of the
+    gaseous-fuel share, corresponding to about 32% of total fuel input.
+    Following the 2024 coal phase-out, v0.1 assumes the former coal share
+    was replaced by fossil natural gas while the absolute biomethane share
+    remained approximately unchanged. This is NOT a verified current
+    Henkel fuel mix. Henkel has stated an intention to increase renewable
+    fuel use, so the actual current biomethane share may be higher.
+    The same aggregate mix is applied to both the CHP block and the boiler.
+    No additional fuel-mix sensitivity is defined in this step.
+
+  coal_share:
+    value: 0.0
+    unit: fraction
+    type: public
+    confidence: high
+    source_or_rationale: "Coal use phased out in 2024. The former coal share is treated as replaced by fossil natural gas in this screening mix."
+
+  fossil_gas_share:
+    value: 0.68
+    unit: fraction
+    type: assumed
+    confidence: low
+    source_or_rationale: "Screening share after assigning the former coal fraction to fossil natural gas. Not a verified current Henkel fuel mix."
+
+  biomethane_share:
+    value: 0.32
+    unit: fraction
+    type: assumed
+    confidence: low
+    source_or_rationale: "About 40% of the gaseous-fuel share in the late-2023 interpretation, held constant after the coal phase-out. The actual current share may be higher."
+
+chp:
+  total_utilization_efficiency:
+    value: 0.86
+    unit: fraction
+    type: assumed
+    confidence: low
+    sensitivity: [0.82, 0.86, 0.90]
+    source_or_rationale: "Screening assumption. Historical reported total energy utilization was about 83% in 2016."
+
+  power_to_heat_ratio:
+    value: 0.50
+    unit: MWh_el/MWh_th
+    type: assumed
+    confidence: low
+    sensitivity: [0.30, 0.50, 0.70]
+    critical: true
+    source_or_rationale: >
+      Technology-based screening prior for the aggregated CHP block.
+      This is not a Henkel-specific measured parameter.
+      The value is sensitivity-tested and will later be checked against
+      historical Holthausen electricity-generation magnitudes.
+
+  max_heat_output_mw:
+    value: 110
+    unit: MW_th
+    type: assumed
+    confidence: low
+    critical: true
+    source_or_rationale: >
+      Screening assumption for the balanced plant configuration.
+      Together with 100 MW_th of modeled boiler capacity, total modeled
+      steam-generation capacity is 210 MW_th, close to the order of
+      magnitude reported in StoREN.
+      This is not a verified current Henkel nameplate capacity.
+
+  baseline_steam_share:
+    value: 0.52
+    unit: fraction
+    type: derived
+    confidence: low
+    source_or_rationale: >
+      Screening calibration parameter for the later rule-based baseline.
+      With annual steam/heat demand of 1,040 GWh and a CHP
+      power-to-heat ratio of 0.50, a 52% CHP share corresponds to
+      approximately 270 GWh/a of CHP electricity generation.
+      This is consistent with the historical Holthausen electricity-
+      generation order of magnitude of roughly 257-285 GWh/a.
+      It is not a measured current CHP steam share.
+
+  min_load_fraction:
+    value: 0.0
+    unit: fraction
+    type: modeling_choice
+    confidence: low
+    source_or_rationale: "Simplified away in v0.1. Later a sensitivity or technical constraint."
+
+  ramp_rate_constraint:
+    value: false
+    type: modeling_choice
+    source_or_rationale: "Excluded from v0.1."
+
+  startup_costs_enabled:
+    value: false
+    type: modeling_choice
+    source_or_rationale: "Excluded from v0.1."
+
+boiler:
+  thermal_efficiency:
+    value: 0.90
+    unit: fraction
+    type: assumed
+    confidence: low
+    sensitivity: [0.85, 0.90, 0.95]
+    source_or_rationale: "Screening assumption for the aggregated fuel-fired boiler. Site-specific efficiency is not set."
+
+  max_heat_output_mw:
+    value: 100
+    unit: MW_th
+    type: assumed
+    confidence: low
+    critical: true
+    source_or_rationale: >
+      Screening assumption for the aggregated fuel-fired boiler block.
+      The value is comparable in scale to StoREN's approximately
+      100 MW_th emergency heat requirement and the approximately
+      92 MW_th future fuel-boiler concept.
+      It is not a verified capacity of the existing Henkel boiler fleet.
+
+plant_structure_scenarios:
+  boiler_heavy:
+    chp_max_heat_mw: 80
+    boiler_max_heat_mw: 140
+    total_heat_capacity_mw: 220
+    description: >
+      Sensitivity case with relatively more steam-only boiler capacity
+      and less CHP heat capacity.
+
+  balanced:
+    chp_max_heat_mw: 110
+    boiler_max_heat_mw: 100
+    total_heat_capacity_mw: 210
+    description: >
+      Base screening configuration used in the main assumptions.
+
+  chp_heavy:
+    chp_max_heat_mw: 140
+    boiler_max_heat_mw: 80
+    total_heat_capacity_mw: 220
+    description: >
+      Sensitivity case with relatively more CHP heat capacity
+      and less steam-only boiler capacity.
+
+market:
+  representative_market_year:
+    value: 2025
+    unit: year
+    type: modeling_choice
+    source_or_rationale: >
+      2025 is used as a complete representative market year for the
+      2026 physical screening model. The 2025 hourly price sequence is
+      mapped in time order onto the 2026 model hours. Those timestamps
+      are not actual 2026 prices.
+
+  electricity_import_price_method:
+    value: "day_ahead_plus_import_adder"
+    type: modeling_choice
+    source_or_rationale: "Import price is the day-ahead price plus an explicit screening adder. The adder is not a full industrial network tariff."
+
+  electricity_export_price_method:
+    value: "day_ahead_minus_export_discount"
+    type: modeling_choice
+    source_or_rationale: "Export price is the day-ahead price minus an explicit screening discount."
+
+  electricity_import_adder_eur_per_mwh:
+    value: 0.0
+    unit: EUR/MWh
+    type: assumed
+    confidence: low
+    sensitivity: [0, 20, 40]
+    source_or_rationale: "Day-ahead price is the marginal opportunity-price proxy. Grid tariffs, taxes, and hedging are unknown, so the base adder is zero. Sensitivities are stored and not run in this step."
+
+  electricity_export_discount_eur_per_mwh:
+    value: 0.0
+    unit: EUR/MWh
+    type: assumed
+    confidence: low
+    sensitivity: [0, 5, 10]
+    source_or_rationale: "Base export price equals the day-ahead price. Sensitivities are stored and not run in this step."
+
+  natural_gas_commodity_eur_per_mwh:
+    value: 36.0
+    unit: EUR/MWh_fuel
+    type: assumed
+    confidence: medium
+    source_or_rationale: >
+      Representative 2025 European wholesale gas-price proxy.
+      This is not Henkel's contract price and is held constant because
+      short-term gas-price variation is not the primary driver of this
+      dispatch screening case.
+
+  gas_variable_adder_eur_per_mwh:
+    value: 4.0
+    unit: EUR/MWh_fuel
+    type: assumed
+    confidence: low
+    sensitivity: [0, 4, 8]
+    source_or_rationale: >
+      Simplified screening allowance for variable gas infrastructure /
+      delivery-related costs. Not a verified Henkel tariff.
+      Detailed gas capacity charges and fixed fees are not modeled.
+
+  biomethane_premium_eur_per_mwh:
+    value: 15.0
+    unit: EUR/MWh_fuel
+    type: assumed
+    confidence: low
+    sensitivity: [10, 15, 30]
+    source_or_rationale: >
+      Screening premium for qualifying biomethane above the underlying
+      gas commodity value. Actual Henkel biomethane contract terms and
+      certification quality are unknown.
+
+  fossil_gas_price_method:
+    value: "commodity_plus_variable_adder_plus_eua"
+    type: modeling_choice
+    source_or_rationale: "Fossil-gas variable cost is the fixed commodity proxy plus the variable adder plus the EUA cost. It is not an hourly gas series."
+
+  biomethane_price_method:
+    value: "commodity_plus_variable_adder_plus_premium"
+    type: modeling_choice
+    source_or_rationale: "Biomethane variable cost is the gas commodity proxy plus the variable adder plus the screening premium. EUA is not added to biomethane in the base case."
+
+emissions:
+  carbon_price_eur_per_tco2:
+    value: 73.86
+    unit: EUR/tCO2
+    type: public
+    confidence: high
+    source_or_rationale: >
+      Average German EUA auction price in 2025. Held fixed for all hours
+      in v0.1. No hourly carbon-price series is built.
+
+  fossil_gas_emission_factor_tco2_per_mwh_fuel:
+    value: 0.2016
+    unit: tCO2/MWh_fuel
+    type: public
+    confidence: high
+    source_or_rationale: >
+      Derived from the German standard natural-gas emission factor of
+      0.056 tCO2/GJ on a lower-heating-value basis:
+      0.056 * 3.6 = 0.2016 tCO2/MWh_fuel.
+      Model fuel energy is interpreted on an LHV basis.
+
+  biomethane_emission_factor_tco2_per_mwh_fuel:
+    value: 0.0
+    unit: tCO2/MWh_fuel
+    type: assumed
+    confidence: low
+    source_or_rationale: >
+      EU ETS combustion factor for qualifying sustainable biomethane in
+      the base screening case. This is conditional on applicable
+      sustainability and certification requirements. It is not a claim
+      that lifecycle emissions are zero.
+
+model:
+  time_resolution:
+    value: "1h"
+    unit: h
+    type: modeling_choice
+    source_or_rationale: "Hourly screening resolution for v0.1."
+
+  hours_per_year:
+    value: 8760
+    unit: h/a
+    type: modeling_choice
+    source_or_rationale: "Non-leap year. The current implementation requires 8760."
+
+  model_year:
+    value: 2026
+    unit: year
+    type: modeling_choice
+    source_or_rationale: >
+      Non-leap screening year aligned with the 2026 working baseline.
+
+  timezone:
+    value: "Europe/Berlin"
+    type: modeling_choice
+    source_or_rationale: >
+      Local site timezone. Hourly timestamps are timezone-aware so later
+      German day-ahead market data can be aligned consistently.
+
+  steam_demand_profile:
+    value: "synthetic"
+    type: modeling_choice
+    source_or_rationale: "No public hourly steam profile is available. Synthetic flat, base, and variable shapes are normalized to the annual total."
+
+  electricity_demand_profile:
+    value: "synthetic"
+    type: modeling_choice
+    source_or_rationale: "No public hourly electricity profile is available. Synthetic flat, base, and variable shapes are normalized to the annual total."
+
+  demand_profile_method:
+    value: "hour_weekday_month_factors_normalized_to_annual_energy"
+    type: modeling_choice
+    source_or_rationale: >
+      Unnormalized shape is the hour factor times the weekday factor times
+      the month factor. The shape is then scaled so the year matches the
+      annual energy assumption. Factors live in demand_profile_scenarios.
+
+  district_heating_enabled:
+    value: false
+    type: modeling_choice
+    source_or_rationale: "Excluded from v0.1 because public heat volumes and commercial terms are unknown."
+
+  steam_storage_enabled:
+    value: false
+    type: modeling_choice
+    source_or_rationale: "Excluded from v0.1."
+
+  third_party_split_enabled:
+    value: false
+    type: modeling_choice
+    source_or_rationale: "Henkel, BASF, and other site consumers stay aggregated in v0.1."
+
+# Synthetic screening shapes. Not measured Henkel load data.
+# raw_t = hour_factor_t * weekday_factor_t * monthly_factor_t,
+# then scaled so the year matches the annual energy totals.
+demand_profile_scenarios:
+  flat:
+    description: >
+      Nearly constant continuous industrial load used as a lower-variation sensitivity case.
+
+    steam:
+      hourly_factors:
+        0: 1.00
+        1: 1.00
+        2: 1.00
+        3: 1.00
+        4: 1.00
+        5: 1.00
+        6: 1.00
+        7: 1.00
+        8: 1.00
+        9: 1.00
+        10: 1.00
+        11: 1.00
+        12: 1.00
+        13: 1.00
+        14: 1.00
+        15: 1.00
+        16: 1.00
+        17: 1.00
+        18: 1.00
+        19: 1.00
+        20: 1.00
+        21: 1.00
+        22: 1.00
+        23: 1.00
+      weekday_factors:
+        monday: 1.00
+        tuesday: 1.00
+        wednesday: 1.00
+        thursday: 1.00
+        friday: 1.00
+        saturday: 1.00
+        sunday: 1.00
+      monthly_factors:
+        1: 1.00
+        2: 1.00
+        3: 1.00
+        4: 1.00
+        5: 1.00
+        6: 1.00
+        7: 1.00
+        8: 1.00
+        9: 1.00
+        10: 1.00
+        11: 1.00
+        12: 1.00
+
+    electricity:
+      hourly_factors:
+        0: 1.00
+        1: 1.00
+        2: 1.00
+        3: 1.00
+        4: 1.00
+        5: 1.00
+        6: 1.00
+        7: 1.00
+        8: 1.00
+        9: 1.00
+        10: 1.00
+        11: 1.00
+        12: 1.00
+        13: 1.00
+        14: 1.00
+        15: 1.00
+        16: 1.00
+        17: 1.00
+        18: 1.00
+        19: 1.00
+        20: 1.00
+        21: 1.00
+        22: 1.00
+        23: 1.00
+      weekday_factors:
+        monday: 1.00
+        tuesday: 1.00
+        wednesday: 1.00
+        thursday: 1.00
+        friday: 1.00
+        saturday: 1.00
+        sunday: 1.00
+      monthly_factors:
+        1: 1.00
+        2: 1.00
+        3: 1.00
+        4: 1.00
+        5: 1.00
+        6: 1.00
+        7: 1.00
+        8: 1.00
+        9: 1.00
+        10: 1.00
+        11: 1.00
+        12: 1.00
+
+  base:
+    description: >
+      Main synthetic screening profile representing continuous three-shift industrial operation with moderate hourly, weekly and seasonal variation.
+
+    steam:
+      hourly_factors:
+        # 00-05
+        0: 0.98
+        1: 0.98
+        2: 0.98
+        3: 0.98
+        4: 0.98
+        5: 0.98
+        # 06-13
+        6: 1.03
+        7: 1.03
+        8: 1.03
+        9: 1.03
+        10: 1.03
+        11: 1.03
+        12: 1.03
+        13: 1.03
+        # 14-21
+        14: 1.02
+        15: 1.02
+        16: 1.02
+        17: 1.02
+        18: 1.02
+        19: 1.02
+        20: 1.02
+        21: 1.02
+        # 22-23
+        22: 0.99
+        23: 0.99
+      weekday_factors:
+        monday: 1.02
+        tuesday: 1.02
+        wednesday: 1.02
+        thursday: 1.02
+        friday: 1.00
+        saturday: 0.94
+        sunday: 0.92
+      monthly_factors:
+        1: 1.04
+        2: 1.03
+        3: 1.02
+        4: 1.00
+        5: 0.99
+        6: 0.97
+        7: 0.96
+        8: 0.96
+        9: 0.99
+        10: 1.01
+        11: 1.03
+        12: 1.04
+
+    electricity:
+      hourly_factors:
+        # 00-05
+        0: 0.96
+        1: 0.96
+        2: 0.96
+        3: 0.96
+        4: 0.96
+        5: 0.96
+        # 06-13
+        6: 1.04
+        7: 1.04
+        8: 1.04
+        9: 1.04
+        10: 1.04
+        11: 1.04
+        12: 1.04
+        13: 1.04
+        # 14-21
+        14: 1.03
+        15: 1.03
+        16: 1.03
+        17: 1.03
+        18: 1.03
+        19: 1.03
+        20: 1.03
+        21: 1.03
+        # 22-23
+        22: 0.98
+        23: 0.98
+      weekday_factors:
+        monday: 1.02
+        tuesday: 1.02
+        wednesday: 1.02
+        thursday: 1.02
+        friday: 1.00
+        saturday: 0.94
+        sunday: 0.92
+      monthly_factors:
+        1: 1.02
+        2: 1.01
+        3: 1.00
+        4: 1.00
+        5: 0.99
+        6: 0.99
+        7: 0.98
+        8: 0.98
+        9: 1.00
+        10: 1.00
+        11: 1.01
+        12: 1.02
+
+  variable:
+    description: >
+      Higher-variation sensitivity case used to test dependence of later dispatch value on unknown temporal load shape.
+
+    steam:
+      hourly_factors:
+        # 00-05
+        0: 0.90
+        1: 0.90
+        2: 0.90
+        3: 0.90
+        4: 0.90
+        5: 0.90
+        # 06-13
+        6: 1.10
+        7: 1.10
+        8: 1.10
+        9: 1.10
+        10: 1.10
+        11: 1.10
+        12: 1.10
+        13: 1.10
+        # 14-21
+        14: 1.08
+        15: 1.08
+        16: 1.08
+        17: 1.08
+        18: 1.08
+        19: 1.08
+        20: 1.08
+        21: 1.08
+        # 22-23
+        22: 0.94
+        23: 0.94
+      weekday_factors:
+        monday: 1.05
+        tuesday: 1.05
+        wednesday: 1.05
+        thursday: 1.05
+        friday: 1.00
+        saturday: 0.86
+        sunday: 0.82
+      monthly_factors:
+        1: 1.10
+        2: 1.08
+        3: 1.04
+        4: 1.00
+        5: 0.97
+        6: 0.93
+        7: 0.90
+        8: 0.91
+        9: 0.97
+        10: 1.02
+        11: 1.07
+        12: 1.10
+
+    electricity:
+      hourly_factors:
+        # 00-05
+        0: 0.88
+        1: 0.88
+        2: 0.88
+        3: 0.88
+        4: 0.88
+        5: 0.88
+        # 06-13
+        6: 1.12
+        7: 1.12
+        8: 1.12
+        9: 1.12
+        10: 1.12
+        11: 1.12
+        12: 1.12
+        13: 1.12
+        # 14-21
+        14: 1.10
+        15: 1.10
+        16: 1.10
+        17: 1.10
+        18: 1.10
+        19: 1.10
+        20: 1.10
+        21: 1.10
+        # 22-23
+        22: 0.93
+        23: 0.93
+      weekday_factors:
+        monday: 1.05
+        tuesday: 1.05
+        wednesday: 1.05
+        thursday: 1.05
+        friday: 1.00
+        saturday: 0.86
+        sunday: 0.82
+      monthly_factors:
+        1: 1.05
+        2: 1.04
+        3: 1.02
+        4: 1.00
+        5: 0.98
+        6: 0.96
+        7: 0.95
+        8: 0.95
+        9: 0.99
+        10: 1.01
+        11: 1.03
+        12: 1.05
+
+economics:
+  value_scope:
+    value: "site_energy_system"
+    type: modeling_choice
+    source_or_rationale: "Results describe the full industrial-site energy system. Read annual Henkel production from site.annual_henkel_production_tonnes."
+
+  henkel_value_allocation_factor:
+    value: null
+    unit: fraction
+    type: TBD
+    source_or_rationale: "Do not infer this directly from the approximate third-party primary-energy share."
