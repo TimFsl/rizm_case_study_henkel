@@ -32,7 +32,13 @@ def main() -> int:
     args = parser.parse_args()
     try:
         assumptions = load_assumptions()
-        source = args.input if args.input is not None else find_smard_csv(ROOT / "data" / "raw")
+        preferred = ROOT / "data" / "raw" / "smard_day_ahead_de_lu_2025.csv"
+        if args.input is not None:
+            source = args.input
+        elif preferred.is_file():
+            source = preferred
+        else:
+            source = find_smard_csv(ROOT / "data" / "raw")
         parsed = parse_smard_day_ahead(source)
         aligned = align_prices_to_model(parsed, assumptions)
     except (AssumptionError, MarketPriceError) as exc:

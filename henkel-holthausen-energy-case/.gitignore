@@ -7,8 +7,19 @@ venv/
 *.egg-info/
 .ipynb_checkpoints/
 
-# Generated results stay local; keep the directory placeholders.
+# Generated results stay local, except the figures and tables the case study cites.
 outputs/figures/*
 !outputs/figures/.gitkeep
+!outputs/figures/final_bc1_baseline_week_stack.png
+!outputs/figures/final_bc1_redispatch_week_stack.png
+!outputs/figures/final_bc2_npv_by_size.png
+!outputs/figures/final_bc2_dcf_comparison.png
 outputs/tables/*
 !outputs/tables/.gitkeep
+!outputs/tables/dispatch_export_sensitivity.csv
+!outputs/tables/electric_boiler_current_vs_forward.csv
+!outputs/tables/electric_boiler_forward_npv.csv
+!outputs/tables/electric_boiler_forward_cost_anchors.csv
+!outputs/tables/electric_boiler_report_current_cost.csv
+!outputs/tables/electric_boiler_report_forward_mid.csv
+data/processed/

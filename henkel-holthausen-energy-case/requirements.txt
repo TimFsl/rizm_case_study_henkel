@@ -3,3 +3,5 @@ pytest
 pandas
 numpy
 matplotlib
+pyomo
+highspy

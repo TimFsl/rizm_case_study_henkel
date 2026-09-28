@@ -2,7 +2,8 @@
 
 Steam demand drives the operation. A fixed share of that steam is assigned
 to the aggregated CHP, the boiler covers the residual, and the grid closes
-the electricity balance. This is not a reconstruction of Henkel's control
+the electricity balance. Fuel use is calculated from that dispatch. It is
+not an input to demand. This is not a reconstruction of Henkel's control
 logic, and it does not respond to market prices.
 """
 

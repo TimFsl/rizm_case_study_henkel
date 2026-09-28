@@ -1,8 +1,9 @@
 """Synthetic hourly steam and electricity demand profiles.
 
 Known annual energy is given a transparent shape and then normalized back
-to that annual total. The shapes are screening scenarios, not measured
-Henkel load data.
+to that annual total. Those annual totals are exogenous screening
+assumptions. They are not derived from fuel input. The shapes are
+screening scenarios, not measured Henkel load data.
 """
 
 from __future__ import annotations
@@ -36,15 +37,29 @@ def build_hourly_index(model_year: int, timezone: str) -> pd.DatetimeIndex:
     """Return the local hourly index for one non-leap screening year.
 
     Europe/Berlin drops one hour in spring and repeats one hour in autumn.
-    Those two transitions cancel, so the calendar year still has 8,760 hours.
+    Those two transitions cancel, so a non-leap calendar year still has 8,760 hours.
+    """
+    index = build_calendar_hourly_index(model_year, timezone)
+    if len(index) != 8760:
+        raise ProfileError(
+            f"Expected 8760 hourly timestamps for {model_year} in {timezone}; "
+            f"got {len(index)}. Leap years use build_calendar_hourly_index."
+        )
+    return index
+
+
+def build_calendar_hourly_index(model_year: int, timezone: str) -> pd.DatetimeIndex:
+    """Local hourly index for a calendar year, including a 366-day leap year.
+
+    A non-leap Europe/Berlin year has 8,760 hours. A leap year has 8,784.
+    The annual energy total is applied later and does not grow with the extra day.
     """
     start = pd.Timestamp(year=int(model_year), month=1, day=1, tz=timezone)
     end = pd.Timestamp(year=int(model_year) + 1, month=1, day=1, tz=timezone)
     index = pd.date_range(start=start, end=end, freq="h", inclusive="left")
-    if len(index) != 8760:
+    if len(index) not in (8760, 8784):
         raise ProfileError(
-            f"Expected 8760 hourly timestamps for {model_year} in {timezone}; "
-            f"got {len(index)}"
+            f"Unexpected hourly count for {model_year} in {timezone}: {len(index)}"
         )
     if not index.is_unique:
         raise ProfileError("Hourly index contains duplicate timestamps")
@@ -93,6 +108,21 @@ def normalize_to_annual_energy(
 
 def build_demand_profile(assumptions: Any, scenario: str) -> pd.DataFrame:
     """Build exogenous hourly steam and electricity demand for one scenario."""
+    model_year = int(_value(assumptions, "model", "model_year"))
+    return build_demand_profile_for_year(assumptions, scenario, model_year)
+
+
+def build_demand_profile_for_year(
+    assumptions: Any,
+    scenario: str,
+    year: int,
+) -> pd.DataFrame:
+    """Same shape factors as the named scenario, on an arbitrary calendar year.
+
+    Annual steam and electricity stay at the configured totals. A leap year
+    has more hours, so the average megawatt is slightly lower. The 2026
+    Business Case 1 profiles are unchanged.
+    """
     scenarios = _section(assumptions, "demand_profile_scenarios")
     if scenario not in scenarios:
         known = ", ".join(str(name) for name in scenarios)
@@ -100,15 +130,18 @@ def build_demand_profile(assumptions: Any, scenario: str) -> pd.DataFrame:
             f"Unknown demand profile scenario {scenario!r}. Known scenarios: {known}"
         )
     block = scenarios[scenario]
-    model_year = _value(assumptions, "model", "model_year")
-    timezone = _value(assumptions, "model", "timezone")
-    index = build_hourly_index(int(model_year), str(timezone))
-    expected_hours = int(_value(assumptions, "model", "hours_per_year"))
-    if len(index) != expected_hours:
-        raise ProfileError(
-            f"Hourly index length {len(index)} does not match "
-            f"model.hours_per_year {expected_hours}"
-        )
+    timezone = str(_value(assumptions, "model", "timezone"))
+    model_year = int(_value(assumptions, "model", "model_year"))
+    if int(year) == model_year:
+        index = build_hourly_index(model_year, timezone)
+        expected_hours = int(_value(assumptions, "model", "hours_per_year"))
+        if len(index) != expected_hours:
+            raise ProfileError(
+                f"Hourly index length {len(index)} does not match "
+                f"model.hours_per_year {expected_hours}"
+            )
+    else:
+        index = build_calendar_hourly_index(int(year), timezone)
 
     columns = {}
     annual_keys = {

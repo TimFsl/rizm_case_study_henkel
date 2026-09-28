@@ -44,6 +44,9 @@ REQUIRED_PARAMETERS = (
     ("historical_reference", "steam_load_min_2012"),
     ("historical_reference", "steam_load_max_2012"),
     ("historical_reference", "electricity_generation_2016"),
+    # Provenance anchors. The fuel figure is a plausibility check, not a demand input.
+    ("historical_reference", "steam_production_2016"),
+    ("historical_reference", "fuel_input_plausibility_twh"),
     ("historical_reference", "total_energy_utilization_2016"),
     ("storen_reference", "reference_year"),
     ("storen_reference", "steam_energy_share_2018"),
@@ -119,7 +122,6 @@ SCENARIO_CAPACITY_KEYS = (
 # assumptions, so they are no longer allowed to be null.
 TBD_PARAMETERS = frozenset(
     {
-        ("grid", "export_capacity_mw"),
         ("economics", "henkel_value_allocation_factor"),
     }
 )
@@ -538,8 +540,10 @@ def _validate_historical_reference(data: dict) -> None:
         )
     for key in (
         "steam_production_2012",
+        "steam_production_2016",
         "electricity_generation_2012",
         "electricity_generation_2016",
+        "fuel_input_plausibility_twh",
     ):
         _require_positive(
             _parameter(data, "historical_reference", key)["value"],

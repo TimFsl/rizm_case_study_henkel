@@ -74,8 +74,17 @@ def _historical_rows(assumptions) -> list[tuple[str, str]]:
             _gwh(assumptions.value("historical_reference", "electricity_generation_2016")),
         ),
         (
+            "2016 steam production:",
+            f"{_number(assumptions.value('historical_reference', 'steam_production_2016'))} t/a",
+        ),
+        (
             "2016 total utilization:",
             f"{assumptions.value('historical_reference', 'total_energy_utilization_2016'):.2f}",
+        ),
+        (
+            "Fuel-input plausibility check:",
+            f"{assumptions.value('historical_reference', 'fuel_input_plausibility_twh'):.2f} TWh/a "
+            "(not a demand input)",
         ),
     ]
 

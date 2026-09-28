@@ -31,6 +31,16 @@ class MarketPriceError(ValueError):
     """Raised when a day-ahead file cannot be parsed or aligned."""
 
 
+def smard_csv_for_year(raw_dir: Path, year: int) -> Path:
+    """Return the local SMARD DE/LU day-ahead file for one calendar year."""
+    path = Path(raw_dir) / f"smard_day_ahead_de_lu_{int(year)}.csv"
+    if not path.is_file():
+        raise MarketPriceError(
+            f"SMARD day-ahead file for {int(year)} was not found at {path}"
+        )
+    return path
+
+
 def find_smard_csv(raw_dir: Path) -> Path:
     """Return the single SMARD day-ahead CSV in a directory."""
     matches = []

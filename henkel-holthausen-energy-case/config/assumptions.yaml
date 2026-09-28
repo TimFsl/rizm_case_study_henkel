@@ -43,19 +43,39 @@ site:
 
 demand:
   # Screening judgment was low/medium. Stored as medium (allowed set: high, medium, low).
+  # Causal order: historical steam anchor -> steam demand -> StoREN demand
+  # ratio -> electricity demand. Fuel follows from steam dispatch, then a check.
+  # Electricity demand closes the residual grid balance.
   annual_steam_heat_gwh:
     value: 1040
     unit: GWh/a
     type: derived
     confidence: medium
-    source_or_rationale: "Derived from public Henkel / StoREN research. Screening judgment was low/medium; stored as medium."
+    source_or_rationale: >
+      Screening annual useful steam/heat demand anchored to historical
+      Holthausen steam production of about 1.5 Mt/a. Converting steam mass
+      to useful thermal energy requires pressure, temperature, and feedwater
+      assumptions. An approximate 0.65-0.70 MWh_th/t screening range places
+      1,040 GWh/a within the historical order of magnitude: 1.5 Mt/a times
+      0.65-0.70 MWh_th/t is about 975-1,050 GWh_th/a. That enthalpy range
+      is not a measured Henkel value. This is not a measured current 2026
+      demand. Screening judgment was low/medium; stored as medium.
 
   annual_electricity_gwh:
     value: 290
     unit: GWh/a
     type: derived
     confidence: medium
-    source_or_rationale: "Derived from public Henkel / StoREN research. Screening judgment was low/medium; stored as medium."
+    source_or_rationale: >
+      Derived from the steam-demand base case using the interpolated StoREN
+      useful-energy demand structure of approximately 78% steam / 22%
+      electricity: 1,040 * 22/78 is about 293 GWh/a, rounded to 290 GWh/a.
+      StoREN reports about 81% steam / 19% electricity for 2018 and about
+      76% steam / 24% electricity in the 2030 case. The 78/22 split is the
+      2026 screening interpolation of that demand structure. It describes
+      site useful-energy demand, not a split of power-plant fuel output.
+      This is a screening assumption, not measured current site electricity
+      consumption. Screening judgment was low/medium; stored as medium.
 
 historical_reference:
   steam_production_2012:
@@ -100,6 +120,35 @@ historical_reference:
     source_or_rationale: >
       Reported historical annual electricity generation at the
       Düsseldorf-Holthausen power plant.
+
+  steam_production_2016:
+    value: 1500000
+    unit: t/a
+    type: public
+    confidence: medium
+    source_or_rationale: >
+      Approximate historical Holthausen steam production reported for 2016,
+      about 1.5 Mt/a. Physical anchor for the annual steam-demand screening
+      value. Not a measured current 2026 demand, and not converted with a
+      site-specific steam enthalpy.
+
+  # External magnitude check only. Dispatch must not read this to set demand.
+  fuel_input_plausibility_twh:
+    value: 1.55
+    unit: TWh/a
+    type: derived
+    confidence: low
+    source_or_rationale: >
+      Approximately 1.55 TWh/a is retained only as an independent site-level
+      magnitude check derived from historical fuel use and later efficiency
+      trends. It is not used to derive current steam or electricity demand.
+      The baseline calculates fuel requirement from steam demand and the
+      modeled CHP/boiler dispatch, using the CHP power-to-heat ratio and
+      asset efficiencies. Electricity demand determines the residual grid
+      import/export balance. That calculated fuel use, about 1.50 TWh/a
+      in the current baseline, is
+      compared with a screening range of about 1.4-1.7 TWh/a around this
+      reference.
 
   total_energy_utilization_2016:
     value: 0.83
@@ -164,15 +213,74 @@ grid:
     source_or_rationale: "Existing grid connection used in StoREN scenarios."
 
   export_capacity_mw:
-    value: null
-    unit: MW
-    type: TBD
+    value: 10.0
+    unit: MW_el
+    type: assumed
     confidence: low
     critical: true
+    sensitivity: [5, 10, 20]
     source_or_rationale: >
-      Site-specific export capacity is not publicly confirmed.
-      This can materially affect CHP dispatch value and must therefore
-      remain a critical TBD parameter.
+      Public sources confirm that surplus electricity from the Holthausen site
+      can be exported to the public grid, but no contracted export capacity was
+      found. The power plant is publicly described primarily as an onsite supply
+      asset, and the 2016 CHP expansion was intended to reduce external
+      electricity purchases. Historical electricity generation of approximately
+      285 GWh/a is also close to the modeled annual site electricity demand of
+      approximately 290 GWh/a, suggesting a system broadly balanced around
+      self-consumption rather than large-scale merchant export.
+      A 10 MW export limit is therefore used as a screening assumption.
+      This is not a verified Henkel value. Sensitivities are 5 MW and 20 MW.
+      An unconstrained run omits the limit and is not inferred from the 64 MW
+      import connection.
+
+# Public 2025 Düsseldorf high-voltage tariff, used only as a screening proxy.
+# The optimizer does not choose between these regimes.
+# Source name: Netzgesellschaft Düsseldorf – Preisblatt Netznutzungsentgelte Strom 2025.
+# No URL is stored. Reserve-capacity products for on-site generation are not modeled.
+grid_tariffs:
+  voltage_level:
+    value: high_voltage
+    type: assumed
+    confidence: low
+    source_or_rationale: >
+      High voltage is used as a screening assumption given the approximately
+      64 MW site grid-connection reference. Screening judgment was low/medium;
+      stored as low. The actual Henkel connection and billing level must be
+      verified onsite. This is not a verified Henkel voltage level.
+
+  hv_high_utilization:
+    utilization_threshold_hours:
+      value: 2500
+      unit: h/a
+    network_energy_charge_eur_per_mwh:
+      value: 7.90
+      unit: EUR/MWh
+    network_demand_charge_eur_per_kw_a:
+      value: 123.93
+      unit: EUR/kW/a
+    type: public_proxy
+    source_or_rationale: >
+      2025 published Netzgesellschaft Düsseldorf high-voltage tariff for
+      metered customers with at least 2,500 utilization hours.
+      Source: Netzgesellschaft Düsseldorf – Preisblatt Netznutzungsentgelte
+      Strom 2025. Used as a public screening proxy, not a verified Henkel tariff.
+
+  hv_low_utilization:
+    utilization_threshold_hours:
+      value: 2500
+      unit: h/a
+    network_energy_charge_eur_per_mwh:
+      value: 49.70
+      unit: EUR/MWh
+    network_demand_charge_eur_per_kw_a:
+      value: 19.30
+      unit: EUR/kW/a
+    type: public_proxy
+    source_or_rationale: >
+      2025 published Netzgesellschaft Düsseldorf high-voltage tariff for
+      metered customers below 2,500 utilization hours.
+      Source: Netzgesellschaft Düsseldorf – Preisblatt Netznutzungsentgelte
+      Strom 2025. Used as a public screening proxy, not a verified Henkel tariff.
 
 fuel_mix:
   note: >
@@ -258,6 +366,21 @@ chp:
       generation order of magnitude of roughly 257-285 GWh/a.
       It is not a measured current CHP steam share.
 
+  chp_ramp_fraction_of_heat_capacity_per_hour:
+    value: 0.50
+    unit: fraction of max CHP heat output per hour
+    type: assumed
+    confidence: low
+    sensitivity: [0.25, 0.50, 1.00]
+    source_or_rationale: >
+      Unit-level current Henkel ramp constraints are not public. A base
+      screening assumption of 50% of aggregated CHP heat capacity per hour is
+      used. This is broadly consistent with a conservative generic CCGT ramp
+      assumption around 0.8% of nameplate capacity per minute (~48%/h), while
+      the real Holthausen system contains multiple aggregated CHP units and may
+      be more or less flexible. Sensitivity cases of 25%, 50%, and 100%/h are
+      therefore reported. This is not a measured Henkel parameter.
+
   min_load_fraction:
     value: 0.0
     unit: fraction
@@ -268,7 +391,10 @@ chp:
   ramp_rate_constraint:
     value: false
     type: modeling_choice
-    source_or_rationale: "Excluded from v0.1."
+    source_or_rationale: >
+      The stored energy-only and unconstrained tariff runs do not enforce a ramp.
+      The final base-profile sensitivity uses
+      chp_ramp_fraction_of_heat_capacity_per_hour. No boiler ramp is applied.
 
   startup_costs_enabled:
     value: false
@@ -335,12 +461,12 @@ market:
   electricity_import_price_method:
     value: "day_ahead_plus_import_adder"
     type: modeling_choice
-    source_or_rationale: "Import price is the day-ahead price plus an explicit screening adder. The adder is not a full industrial network tariff."
+    source_or_rationale: "Commodity import price is the day-ahead price plus an explicit screening adder. The adder stays at zero in the tariff runs. The Düsseldorf network energy charge and demand charge are applied separately and are not folded into this adder."
 
   electricity_export_price_method:
     value: "day_ahead_minus_export_discount"
     type: modeling_choice
-    source_or_rationale: "Export price is the day-ahead price minus an explicit screening discount."
+    source_or_rationale: "Export price is the day-ahead price minus a screening marketing, balancing, and transaction discount. That discount is not a network charge."
 
   electricity_import_adder_eur_per_mwh:
     value: 0.0
@@ -348,15 +474,23 @@ market:
     type: assumed
     confidence: low
     sensitivity: [0, 20, 40]
-    source_or_rationale: "Day-ahead price is the marginal opportunity-price proxy. Grid tariffs, taxes, and hedging are unknown, so the base adder is zero. Sensitivities are stored and not run in this step."
+    source_or_rationale: >
+      Kept at zero for the network-tariff runs. The explicit Düsseldorf
+      high-voltage energy charge and annual demand charge replace a generic
+      network-cost adder. Adding this adder on top of that tariff would
+      double-count network cost. The stored sensitivities are not run here.
 
   electricity_export_discount_eur_per_mwh:
-    value: 0.0
+    value: 5.0
     unit: EUR/MWh
     type: assumed
     confidence: low
     sensitivity: [0, 5, 10]
-    source_or_rationale: "Base export price equals the day-ahead price. Sensitivities are stored and not run in this step."
+    source_or_rationale: >
+      Screening marketing, balancing, and transaction discount.
+      Export price is the day-ahead price minus 5 EUR/MWh.
+      This discount is not a network charge. The 0 and 10 EUR/MWh
+      sensitivities are stored and not run in this step.
 
   natural_gas_commodity_eur_per_mwh:
     value: 36.0
@@ -824,3 +958,200 @@ economics:
     unit: fraction
     type: TBD
     source_or_rationale: "Do not infer this directly from the approximate third-party primary-energy share."
+
+# Business Case 2. These parameters do not change the Business Case 1 dispatch.
+electric_boiler:
+  electrical_to_heat_efficiency:
+    value: 0.99
+    unit: fraction
+    type: assumed
+    confidence: high
+    source_ids: [EB01, EB02]
+    source_or_rationale: >
+      Industrial electrode boilers are reported with electrical-to-heat
+      efficiency from about 95% up to 99.9%. 99% is a conservative central
+      screening value inside that range. Screening judgment was medium/high;
+      stored as high. This is not a measured Holthausen efficiency.
+
+  screened_capacities_mwth:
+    value: [0, 5, 10, 15, 20, 25, 30, 35, 40]
+    unit: MW_th
+    type: modeling_choice
+    source_or_rationale: >
+      Discrete useful-steam capacities. 0 MW is the optimized existing system.
+      Capacity is not a continuous investment variable inside the hourly model.
+
+  capex_eur_per_mwth:
+    value: 200000
+    unit: EUR/MW_th
+    type: assumed
+    confidence: low
+    sensitivity: [115000, 200000, 390000]
+    source_ids: [EB02, EB03]
+    source_or_rationale: >
+      200,000 EUR/MW_th is a chosen screening value between published
+      benchmarks. It is not itself a published central value and it is not a
+      Henkel vendor quote. 115,000 EUR/MW_th is the low generic literature
+      benchmark from the PBL/TNO SDE++ concept advice for a large electric
+      boiler, including onsite electrical infrastructure and a steam
+      connection where sufficient grid capacity already exists. 390,000
+      EUR/MW_th is a high integrated-project comparator in the neighborhood of
+      a German chemical-site electrode-boiler project, not a line-item quote.
+      The installed cost is understood to include normal onsite integration:
+      internal electrical connection, a transformer and switchgear allowance,
+      piping, controls, engineering, and installation. Major external grid
+      reinforcement is excluded.
+
+  fixed_om_fraction_of_capex:
+    value: 0.017
+    unit: fraction/a
+    type: assumed
+    confidence: low
+    source_ids: [EB02, EB04]
+    source_or_rationale: >
+      Fixed O&M is 1.7% of installed CAPEX per year. PBL/TNO also publishes a
+      fixed O&M allowance that includes network cost. That allowance is not
+      used, because this model already prices the Düsseldorf network tariff
+      separately. Variable e-boiler O&M is zero; electricity is the operating
+      cost. Existing CHP and gas-boiler fixed O&M is not reduced.
+
+  variable_om_eur_per_mwh:
+    value: 0.0
+    unit: EUR/MWh_th
+    type: modeling_choice
+    source_or_rationale: >
+      No separate variable e-boiler O&M. Electricity, fuel, carbon, and the
+      network tariff already carry the operating cost.
+
+  external_grid_expansion:
+    value: false
+    type: modeling_choice
+    source_or_rationale: >
+      The e-boiler must fit behind the existing 64 MW import connection.
+      External grid reinforcement would be a separate investment case.
+
+  steam_header_integration:
+    value: "single aggregated steam bus"
+    type: modeling_choice
+    source_or_rationale: >
+      The model assumes the e-boiler can be connected to a suitable steam
+      header. Actual pressure-level integration is a key onsite engineering
+      validation because Holthausen operates multiple steam pressure levels.
+
+  market_price_years:
+    value: [2023, 2024, 2025]
+    unit: year
+    type: modeling_choice
+    source_ids: [MKT01]
+    source_or_rationale: >
+      Three observed DE/LU day-ahead years are an equally weighted empirical
+      ensemble. They are not averaged hour by hour and they are not a forecast.
+
+  first_operating_year:
+    value: 2026
+    unit: year
+    type: modeling_choice
+    source_or_rationale: "Screening commissioning year. CAPEX is at t = 0, before this year."
+
+  lifetime_years:
+    value: 15
+    unit: a
+    type: assumed
+    confidence: low
+    sensitivity: [10, 15, 20]
+    source_ids: [EB04]
+    source_or_rationale: >
+      15 years is the central screening life. 10 and 20 years are sensitivities.
+      No salvage value is taken at the end of life.
+
+  real_discount_rate:
+    value: 0.10
+    unit: fraction
+    type: assumed
+    confidence: low
+    sensitivity: [0.08, 0.10, 0.12]
+    source_ids: [FIN01]
+    source_or_rationale: >
+      10% real is a screening investment hurdle, not Henkel's verified WACC.
+      It sits in the 10-12% heavy-industry private discount-rate range used in
+      PRIMES-style EU reference modelling. Screening judgment was low/medium;
+      stored as low. No general inflation is applied.
+
+  electricity_price_multiplier:
+    value: 1.0
+    unit: fraction
+    type: modeling_choice
+    sensitivity: [0.8, 1.0, 1.2]
+    source_or_rationale: >
+      One-way scaler on the historical day-ahead shapes, used only at the
+      selected size. Hourly prices are not trended with the EUA path.
+
+  fossil_pre_carbon_eur_per_mwh:
+    value: 40
+    unit: EUR/MWh_fuel
+    type: derived
+    confidence: medium
+    sensitivity: [30, 40, 50]
+    source_or_rationale: >
+      Primary real pre-carbon fossil-gas cost, equal to the configured gas
+      commodity plus the gas variable adder. It is held constant. Carbon is
+      added separately through the EUA path. The sensitivities replace that
+      pre-carbon stack and are not a price forecast.
+
+  biomethane_eur_per_mwh:
+    value: 55
+    unit: EUR/MWh_fuel
+    type: derived
+    confidence: low
+    sensitivity: [55, 75, 100]
+    source_ids: [BIO01]
+    source_or_rationale: >
+      Primary biomethane price equals the configured commodity plus adder plus
+      premium, held constant in real terms. It is not linked to fossil-gas
+      growth. 75 and 100 EUR/MWh are one-way sensitivities, not forecasts.
+      The fuel mix is unchanged. Henkel decarbonization targets are strategic
+      context and are not converted into a Holthausen fuel-share path.
+
+  primary_carbon_path:
+    value: base
+    type: modeling_choice
+    source_or_rationale: >
+      NPV and size use the base EUA path. Low and high paths are sensitivities.
+      None of the paths is a forecast.
+
+  # Screening scenarios, not forecasts. Annual values are linear between anchors.
+  # Years after the last anchor hold that anchor. Not a value-parameter.
+  carbon_price_paths:
+    base:
+      2026: 80
+      2030: 110
+      2040: 150
+    low:
+      2026: 80
+      2030: 80
+      2040: 80
+    high:
+      2026: 80
+      2030: 140
+      2040: 300
+
+  # Screening scenarios, not forecasts. Not a value-parameter.
+  # The anchors are rounded assumptions informed by GAS01, CO201, and CO202.
+  # They are not copied forecasts. All three paths share the 2026 start.
+  # Biomethane in this screen is pre-carbon gas plus the existing premium.
+  # EUA is not applied to qualifying biomethane combustion.
+  forward_fossil_cost_paths:
+    source_ids: [GAS01, CO201, CO202]
+    low:
+      2026: {precarbon_gas_eur_mwh: 40, eua_eur_t: 80}
+      2030: {precarbon_gas_eur_mwh: 30, eua_eur_t: 80}
+      2040: {precarbon_gas_eur_mwh: 30, eua_eur_t: 80}
+    mid:
+      2026: {precarbon_gas_eur_mwh: 40, eua_eur_t: 80}
+      2030: {precarbon_gas_eur_mwh: 40, eua_eur_t: 110}
+      2040: {precarbon_gas_eur_mwh: 40, eua_eur_t: 150}
+    high:
+      2026: {precarbon_gas_eur_mwh: 40, eua_eur_t: 80}
+      2030: {precarbon_gas_eur_mwh: 50, eua_eur_t: 140}
+      2040: {precarbon_gas_eur_mwh: 50, eua_eur_t: 300}
+

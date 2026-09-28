@@ -17,6 +17,8 @@ def test_valid_configuration_loads():
     assumptions = load_assumptions()
     assert assumptions.value("demand", "annual_steam_heat_gwh") == 1040
     assert assumptions.value("demand", "annual_electricity_gwh") == 290
+    assert assumptions.value("historical_reference", "steam_production_2016") == 1_500_000
+    assert assumptions.value("historical_reference", "fuel_input_plausibility_twh") == 1.55
     assert assumptions.value("grid", "import_capacity_mw") == 64
     assert assumptions.value("model", "hours_per_year") == 8760
     assert assumptions.value("chp", "total_utilization_efficiency") == 0.86
@@ -34,6 +36,25 @@ def test_valid_configuration_loads():
     assert ratio["critical"] is True
     assert ratio["sensitivity"] == [0.30, 0.50, 0.70]
     assert assumptions.is_tbd("chp", "power_to_heat_ratio") is False
+
+
+def test_demand_provenance_does_not_start_from_fuel_input():
+    assumptions = load_assumptions()
+    steam = assumptions.parameter("demand", "annual_steam_heat_gwh")["source_or_rationale"]
+    electricity = assumptions.parameter("demand", "annual_electricity_gwh")[
+        "source_or_rationale"
+    ]
+    fuel = assumptions.parameter(
+        "historical_reference", "fuel_input_plausibility_twh"
+    )["source_or_rationale"]
+    assert "1.5 Mt/a" in steam
+    assert "0.65-0.70" in steam
+    assert "1.55" not in steam
+    assert "0.86" not in steam
+    assert "22/78" in electricity
+    assert "290 GWh/a" in electricity
+    assert "0.86" not in electricity
+    assert "not used to derive current steam or electricity demand" in fuel
 
 
 def test_invalid_fuel_shares_raise():
@@ -105,13 +126,27 @@ def test_balanced_scenario_must_match_base_capacities():
         validate_assumptions(data)
 
 
-def test_export_capacity_may_remain_null():
+def test_export_capacity_is_a_screening_assumption():
     assumptions = load_assumptions()
     export = assumptions.parameter("grid", "export_capacity_mw")
-    assert export["value"] is None
-    assert export["type"] == "TBD"
+    assert export["value"] == 10.0
+    assert export["type"] == "assumed"
     assert export["critical"] is True
-    assert assumptions.is_tbd("grid", "export_capacity_mw")
+    assert export["sensitivity"] == [5, 10, 20]
+    assert assumptions.is_tbd("grid", "export_capacity_mw") is False
+
+
+def test_tbd_parameters_are_allowed():
+    assumptions = load_assumptions()
+    assert assumptions.is_tbd("economics", "henkel_value_allocation_factor")
+    assert assumptions.is_tbd("market", "electricity_import_adder_eur_per_mwh") is False
+    assert assumptions.critical_tbd() == []
+
+    data = assumptions.as_dict()
+    data["demand"]["annual_steam_heat_gwh"]["value"] = None
+    data["demand"]["annual_steam_heat_gwh"]["type"] = "TBD"
+    with pytest.raises(AssumptionError, match="annual_steam_heat_gwh"):
+        validate_assumptions(data)
 
 
 def test_henkel_production_is_not_duplicated_under_economics():
@@ -135,19 +170,4 @@ def test_screening_plant_parameters_cannot_return_to_null():
     data["boiler"]["max_heat_output_mw"]["value"] = None
     data["boiler"]["max_heat_output_mw"]["type"] = "TBD"
     with pytest.raises(AssumptionError, match="max_heat_output_mw"):
-        validate_assumptions(data)
-
-
-def test_tbd_parameters_are_allowed():
-    assumptions = load_assumptions()
-    assert assumptions.is_tbd("grid", "export_capacity_mw")
-    assert assumptions.is_tbd("market", "electricity_import_adder_eur_per_mwh") is False
-    assert assumptions.critical_tbd() == [
-        "grid.export_capacity_mw",
-    ]
-
-    data = assumptions.as_dict()
-    data["demand"]["annual_steam_heat_gwh"]["value"] = None
-    data["demand"]["annual_steam_heat_gwh"]["type"] = "TBD"
-    with pytest.raises(AssumptionError, match="annual_steam_heat_gwh"):
         validate_assumptions(data)

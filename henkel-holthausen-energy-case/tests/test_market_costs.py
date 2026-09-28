@@ -16,9 +16,9 @@ from src.baseline import dispatch_baseline
 from src.costs import cost_baseline, fuel_price_breakdown, summarize_costed_baseline
 from src.market_prices import (
     align_prices_to_model,
-    find_smard_csv,
     parse_decimal,
     parse_smard_day_ahead,
+    smard_csv_for_year,
 )
 from src.profiles import build_demand_profile, build_hourly_index
 
@@ -62,7 +62,7 @@ def test_parse_decimal_accepts_german_commas_and_dots():
 
 
 def test_smard_file_maps_onto_8760_model_hours_and_keeps_negative_prices():
-    source = find_smard_csv(ROOT / "data" / "raw")
+    source = smard_csv_for_year(ROOT / "data" / "raw", 2025)
     parsed = parse_smard_day_ahead(source)
     aligned = align_prices_to_model(parsed, ASSUMPTIONS)
     assert len(aligned) == 8760
@@ -79,7 +79,7 @@ def test_smard_file_maps_onto_8760_model_hours_and_keeps_negative_prices():
 
 def test_cost_identity_for_all_baseline_scenarios():
     prices = align_prices_to_model(
-        parse_smard_day_ahead(find_smard_csv(ROOT / "data" / "raw")),
+        parse_smard_day_ahead(smard_csv_for_year(ROOT / "data" / "raw", 2025)),
         ASSUMPTIONS,
     )
     breakdown = fuel_price_breakdown(ASSUMPTIONS)
