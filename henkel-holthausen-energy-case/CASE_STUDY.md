@@ -184,6 +184,8 @@ In the optimized redispatch case, the annual CHP production is kept fixed, but i
 
 <img src="outputs/figures/final_bc1_redispatch_week_stack.png" width="100%">
 
+The figures use the synthetic 2026 demand calendar. The dispatch economics use observed 2025 DE/LU Day-Ahead prices mapped onto the model hours.
+
 The export-capacity sensitivity is:
 
 | Export capacity | Annual value | Value |

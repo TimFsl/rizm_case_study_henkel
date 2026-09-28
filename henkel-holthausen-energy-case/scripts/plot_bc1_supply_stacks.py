@@ -80,18 +80,17 @@ def main() -> None:
         raise SystemExit("Redispatch week does not match the frozen primary value")
 
     FIGURES.mkdir(parents=True, exist_ok=True)
-    week = f"week of {DEFAULT_WEEK_START}"
     plot_supply_stack_week(
         baseline,
         DEFAULT_WEEK_START,
         FIGURES / "final_bc1_baseline_week_stack.png",
-        f"Business Case 1 baseline, {week}",
+        "Business Case 1 baseline, representative week",
     )
     plot_supply_stack_week(
         redispatch.frame,
         DEFAULT_WEEK_START,
         FIGURES / "final_bc1_redispatch_week_stack.png",
-        f"Business Case 1 redispatch only, 10 MW export, {week}",
+        "Business Case 1 redispatch only, 10 MW export, representative week",
     )
     print(f"Redispatch week matches frozen value {value / 1e6:.6f} M EUR/a")
     print("Supply-stack figures written")
